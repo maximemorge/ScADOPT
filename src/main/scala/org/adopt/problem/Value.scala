@@ -2,10 +2,10 @@
 package org.adopt.problem
 
 /**
-  * A domain for a variable is a set of values
+  * A domain for a variable is an ordered list of values
   */
 package object domain {
-  type Domain = Set[_ <:Value]
+  type Domain = List[_ <:Value]
 }
 
 /**
@@ -70,8 +70,8 @@ class BooleanValue(val value : Boolean) extends Value{
   /**
     * Returns a string representation of the value
     */
-  override def toString: String =  value match {
-    case true => "True"
-    case false => "False"
+  override def toString: String = {
+    if (value) return "True"
+    "False"
   }
 }

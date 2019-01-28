@@ -6,15 +6,18 @@ package org.adopt.problem
   * @param variables for which values must be given
   * @param constraints represented as cost functions
   */
-class DCOP(val variables: Set[Variable], constraints : Set[Constraint]){
-
+class DCOP(val variables: Set[Variable], val constraints : Set[Constraint]){
   /**
-    * Nice representation as a string
+    * String representation
     */
   override def toString: String = s"Variables:\n"+
     variables.mkString("\t", "\n\t", "\n")+
   "Constraints:\n"+
     constraints.mkString("\t", "\n\t", "\n")
 
+  /**
+    * Return true if the pb is sound
+    */
+  def sound() : Boolean = variables.nonEmpty && variables.map(_.id).size == variables.size && constraints.forall( c => c.sound())
 }
 
