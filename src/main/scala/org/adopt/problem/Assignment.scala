@@ -6,9 +6,7 @@ package org.adopt.problem
   * @param pb DCOP
   * @param value for each variable
   */
-
 class Assignment(val pb : DCOP, value : Map[Variable, Value]){
-
   /**
     * Returns the objective value of the assignment
     */

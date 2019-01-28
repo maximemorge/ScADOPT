@@ -1,6 +1,7 @@
 // Copyright (C) Maxime MORGE 2018
 package org.adopt.util
 
+import org.adopt.dfs.DFS
 import org.adopt.problem._
 
 /**
@@ -16,6 +17,8 @@ object Main {
     if (! Toy4Example.a2.sound()) throw new RuntimeException("A1 is not sound")
     println("A2: " + Toy4Example.a2)
     println("Objective: " + Toy4Example.a2.objective())
+    val dfs =DFS(Toy4Example.pb,Toy4Example.x1)
+    println("DFS: "+dfs)
     sys.exit(0)
   }
 }
