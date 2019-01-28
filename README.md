@@ -37,7 +37,7 @@ Compile
 
 then
 
-    sbt "run org.scadopt.util.Main"
+    sbt "run org.adopt.util.Main"
 
 and eventually
 
