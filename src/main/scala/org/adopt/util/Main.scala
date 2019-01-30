@@ -1,30 +1,32 @@
 // Copyright (C) Maxime MORGE 2018
 package org.adopt.util
 
+import akka.actor.ActorSystem
 import org.adopt.dfs.DFS
-import org.adopt.problem._
+import org.adopt.solver.DistributedSolver
 
 /**
   * Main application
   */
 object Main {
+  import org.adopt.problem.Toy4Example._
   def main(args: Array[String]): Unit = {
-    if (! Toy4Example.pb.sound()) throw new RuntimeException("Pb is not sound")
-    println(Toy4Example.pb)
-    if (! Toy4Example.a1.sound()) throw new RuntimeException("A1 is not sound")
-    println("A1: " + Toy4Example.a1)
-    println("Objective: " + Toy4Example.a1.objective())
-    if (! Toy4Example.a2.sound()) throw new RuntimeException("A1 is not sound")
-    println("A2: " + Toy4Example.a2)
-    println("Objective: " + Toy4Example.a2.objective())
-    //val dfs =DFS(Toy4Example.pb,Toy4Example.x1)
-    val dfs3 = new DFS(Toy4Example.x3)
-    val dfs4 = new DFS(Toy4Example.x4)
-    val dfs2 = new DFS(Toy4Example.x2)
-    dfs2.children= Set(dfs3, dfs4)
-    val dfs = new DFS(Toy4Example.x1)
-    dfs.children = Set(dfs2)
+    if (! pb.sound()) throw new RuntimeException("Pb is not sound")
+    println(pb)
+    if (! a1.sound()) throw new RuntimeException("A1 is not sound")
+    println("A1: " + a1)
+    println("Objective: " + a1.objective())
+    if (! a2.sound()) throw new RuntimeException("A1 is not sound")
+    println("A2: " + a2)
+    println("Objective: " + a2.objective())
+    val dfs =DFS(pb,x1)
     println("DFS: "+dfs)
+
+    val system = ActorSystem("TestDistributedSolver")
+    val solver = new DistributedSolver(pb, system)
+    val assignment = solver.run()
+    println("Adopt outcome: " + assignment)
+    println("Objective: " + assignment.objective())
     sys.exit(0)
   }
 }

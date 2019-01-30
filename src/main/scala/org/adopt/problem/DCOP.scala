@@ -6,7 +6,7 @@ package org.adopt.problem
   * @param variables for which values must be given
   * @param constraints represented as cost functions
   */
-class DCOP(val variables: Set[Variable], val constraints : Set[Constraint]){
+class DCOP(val variables: Set[Variable], val constraints : List[Constraint]){
   /**
     * String representation
     */

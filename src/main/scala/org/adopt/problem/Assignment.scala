@@ -6,7 +6,15 @@ package org.adopt.problem
   * @param pb DCOP
   * @param value for each variable
   */
-class Assignment(val pb : DCOP, value : Map[Variable, Value]){
+class Assignment(val pb : DCOP, var value : Map[Variable, Value]){
+
+  /**
+    * Secondary constructor
+    */
+  def this(pb : DCOP) = {
+    this(pb, Map[Variable, Value]())
+  }
+
   /**
     * Returns the objective value of the assignment
     */
@@ -29,6 +37,11 @@ class Assignment(val pb : DCOP, value : Map[Variable, Value]){
     }
     true
   }
+
+  /**
+    * Returns true if the assignment is full
+    */
+  def isFull(): Boolean = value.size == pb.variables.size
 
   /**
     * String representation of the assignment

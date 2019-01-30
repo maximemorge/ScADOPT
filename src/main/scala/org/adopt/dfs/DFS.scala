@@ -26,7 +26,17 @@ object DFS{
 
   /**
     * Factory's method
+    * @param pb DCOP
     */
+  def apply(pb: DCOP): DFS = {
+    apply(pb,pb.variables.head)
+  }
+
+  /**
+    * Factory's method
+    * @param pb DCOP
+    * @param root variable
+  */
   def apply(pb: DCOP, root: Variable): DFS = {
     pb.variables.foreach { v =>
       marked += (v -> false)
