@@ -9,20 +9,19 @@ import org.adopt.problem.{Assignment, Variable, Value}
 abstract class Message
 
 // Managing messages
-// Debugs message
+// Debuging message
 case object Trace extends  Message
-// Start the solving
+// Starts the solving
 case object Start extends Message
-// Initiates the variable agent with a directory, children, and eventually a parent
+// Initiates a variable agent with a directory, children, and eventually a parent
 case class Init(directory : Directory, parent : Option[Variable], children: Set[Variable]) extends Message
 // The variable agent is ready to start
 case object Ready extends Message
 // Gives the value of the variable agent
 case class Valuation(value : Value) extends Message
-// Give an assignment and the statistics
+// Gives an assignment and the statistics
 case class Outcome(assignment : Assignment) extends  Message
-// Stop an agent
+// Stops an agent
 case object Stop extends Message
-
 
 // DCOP messages

@@ -5,6 +5,7 @@ import org.adopt.problem.{DCOP,Variable}
 
 /**
   * Class representing a depth-first search tree for a DCOP
+  * @param root variable
   */
 class DFS(val root : Variable){
   var children : Set[DFS] = Set[DFS]()
@@ -22,6 +23,7 @@ class DFS(val root : Variable){
   * Factory for [[org.adopt.dfs.DFS]] instances
   */
 object DFS{
+  // Is the variables are marked
   var marked :  Map[Variable,Boolean] = Map[Variable,Boolean]()
 
   /**
@@ -45,15 +47,14 @@ object DFS{
   }
 
   /**
-    * A recursive implementation of DFS
+    * Returns a DFS which is recursively built
     */
   def buildDFS(pb: DCOP, root : Variable): DFS = {
     val dfs = new DFS(root)
     marked += (root -> true)
-    pb.linked(root).foreach{ v =>
-      if (! marked(v)) dfs.children += buildDFS(pb, v)
+    pb.linked(root).foreach{ v => // for each linked variable
+      if (! marked(v)) dfs.children += buildDFS(pb, v) // if the variable is not marked add subtree
     }
     dfs
   }
 }
-

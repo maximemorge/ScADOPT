@@ -50,7 +50,7 @@ object DistributedSolver{
   var id = 0
   val debug = false
   def main(args: Array[String]): Unit = {
-    import org.adopt.problem.Toy4Example._
+    import org.adopt.problem.ToyExample._
     println(pb)
     val r = scala.util.Random
     val system = ActorSystem("DistributedSolver" + r.nextInt.toString)

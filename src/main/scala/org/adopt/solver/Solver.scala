@@ -5,11 +5,10 @@ import org.adopt.problem.{Assignment, DCOP}
 
 /**
   * Abstract class representing a solver
-  * @param pb DCOP to be solved
+  * @param pb DCOP instance
   */
 abstract class Solver(val pb : DCOP) {
   var debug = false
-
   var solvingTime : Long = 0
 
   /**

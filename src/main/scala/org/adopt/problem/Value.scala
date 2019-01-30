@@ -27,7 +27,7 @@ abstract class Value{
   * Class for representing values of nominal variables, i.e.
   * variables whose domains are finite
   */
-class NominalValue(val value : String) extends Value{
+case class NominalValue(value : String) extends Value{
   /**
     * A secondary constructor.
     */
@@ -53,9 +53,9 @@ class NominalValue(val value : String) extends Value{
 
 /**
   * Class for representing values of a boolean variable, i.e.
-  * variables whose domain is true flaise
+  * variables whose values are true and false
   */
-class BooleanValue(val value : Boolean) extends Value{
+case class BooleanValue(value : Boolean) extends Value{
 
   /**
     * Returns true if this value is equal to v

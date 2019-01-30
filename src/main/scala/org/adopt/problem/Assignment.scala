@@ -3,7 +3,7 @@ package org.adopt.problem
 
 /**
   * Class representing an assignment
-  * @param pb DCOP
+  * @param pb DCOP instance
   * @param value for each variable
   */
 class Assignment(val pb : DCOP, var value : Map[Variable, Value]){
@@ -29,7 +29,8 @@ class Assignment(val pb : DCOP, var value : Map[Variable, Value]){
   }
 
   /**
-    * Return true if the pb is sound
+    * Returnw true if the pb is sound,
+    * i.e. each value is in the corresponding domain
     */
   def sound() : Boolean = {
     pb.variables.foreach{ variable =>
@@ -41,7 +42,7 @@ class Assignment(val pb : DCOP, var value : Map[Variable, Value]){
   /**
     * Returns true if the assignment is full
     */
-  def isFull(): Boolean = value.size == pb.variables.size
+  def isFull: Boolean = value.size == pb.variables.size
 
   /**
     * String representation of the assignment

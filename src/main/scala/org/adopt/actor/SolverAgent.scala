@@ -7,8 +7,8 @@ import org.adopt.dfs.DFS
 import akka.actor.{Actor, ActorRef, Props}
 
 /**
-  * SolverAgent which starts and stops the computation of an allocation
-  * @param pb DCOP problem instance
+  * SolverAgent which starts and stops the computation of an assignment
+  * @param pb DCOP instance
   * */
 class SolverAgent(val pb: DCOP) extends Actor{
   var debug = true
@@ -16,9 +16,9 @@ class SolverAgent(val pb: DCOP) extends Actor{
   private var solver : ActorRef= context.parent
   // Number of agents which are ready
   private var nbReady = 0
-  // Is the solver agent started ?
+  // Is the solver agent started
   var started = false
-  // White page id/agent
+  // White page variable/actor
   private val directory = new Directory()
   // The assignment to build
   private val assignment = new Assignment(pb)
@@ -31,7 +31,7 @@ class SolverAgent(val pb: DCOP) extends Actor{
   init(DFS(pb), None)
 
   /**
-    *  Initiation of the agents with the directory, the parent and the children
+    *  Returns the root variable of the DFS whose children have been initiated
     */
   def init(dfs: DFS, parent: Option[Variable]) : Variable = {
     var children = Set[Variable]()
@@ -46,26 +46,26 @@ class SolverAgent(val pb: DCOP) extends Actor{
     * Message handling
     */
   override def receive: Receive = {
-
+    // When a variable agent is ready
     case Ready =>
       nbReady += 1
       if (nbReady == pb.variables.size && started) directory.allActors().foreach(_ ! Start)
 
-    //In order to debug
+    //When debugging mode is triggered
     case Trace =>
       debug = true
       directory.allActors().foreach(_ ! Trace)
 
-    //When the works should be done
+    //When the solving is triggered
     case Start =>
       solver = sender
       started = true
       if (nbReady == pb.variables.size ) directory.allActors().foreach(_ ! Start)
 
-
+    //When the value of variable is setup
     case Valuation(value) =>
         assignment.value += (directory.variables(sender) -> value)
-        if (assignment.isFull()){
+        if (assignment.isFull){
           solver ! Outcome(assignment) // reports the allocation
           directory.allActors().foreach(a => a ! Stop) // stops the actors
           context.stop(self) //stops the solverAgent
@@ -73,7 +73,7 @@ class SolverAgent(val pb: DCOP) extends Actor{
 
     // Unexpected message
     case msg@_ =>
-      println("WARNING: Solver receives a message which was not expected: " + msg)
+      println("WARNING: SolverAgent receives a message which was not expected: " + msg)
   }
 
 }

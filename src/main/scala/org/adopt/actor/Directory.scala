@@ -8,15 +8,18 @@ import org.adopt.problem.Variable
   * Class representing an index of the names and addresses of peers
   */
 class Directory {
-  var adr = Map[Variable, ActorRef]()//Agents' references
-  var variables = Map[ActorRef, Variable]()// Actors' worker
+  var adr : Map[Variable, ActorRef] = Map[Variable, ActorRef]()//Variables' actors
+  var variables : Map[ActorRef, Variable] = Map[ActorRef, Variable]()// Actors' variable
 
+  /**
+    * String representation
+    */
   override def toString: String = allVariables().mkString("[",", ","]")
 
   /**
     * Add to the directory
-    * @param variable
-    * @param ref
+    * @param variable to add
+    * @param ref to add
     */
   def add(variable: Variable, ref: ActorRef) : Unit = {
     if ( ! adr.keySet.contains(variable) &&  ! variables.keySet.contains(ref)) {

@@ -2,11 +2,11 @@
 package org.adopt.problem
 
 /**
-  * Object representing a toy DCOP example
+  * Object representing a toy DCOP instance
   */
-object Toy4Example {
-  val t = new BooleanValue(false)
-  val f = new BooleanValue(true)
+object ToyExample {
+  val t = BooleanValue(false)
+  val f = BooleanValue(true)
   val booleanDomain = List(t, f)
   val x1 = new Variable(id = 1, booleanDomain)
   val x2 = new Variable(id = 2, booleanDomain)

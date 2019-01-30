@@ -7,6 +7,7 @@ package org.adopt.problem
   * @param constraints represented as cost functions
   */
 class DCOP(val variables: Set[Variable], val constraints : List[Constraint]){
+
   /**
     * String representation
     */
@@ -16,7 +17,7 @@ class DCOP(val variables: Set[Variable], val constraints : List[Constraint]){
     constraints.mkString("\t", "\n\t", "\n")
 
   /**
-    * Returns the variables links to v
+    * Returns the variables linked to v
     */
   def linked(v : Variable) :  List[Variable] = {
     var l =  List[Variable]()
@@ -28,7 +29,10 @@ class DCOP(val variables: Set[Variable], val constraints : List[Constraint]){
   }
 
   /**
-    * Return true if the pb is sound
+    * Return true if the DCOP is sound, i.e.
+    * 1 -there is at least one variable,
+    * 2- each variable has a unique id
+    * all the constraints are sound
     */
   def sound() : Boolean = variables.nonEmpty && variables.map(_.id).size == variables.size && constraints.forall( c => c.sound())
 }

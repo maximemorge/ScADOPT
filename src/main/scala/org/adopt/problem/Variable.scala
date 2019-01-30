@@ -5,14 +5,14 @@ import domain.Domain
 
 /**
   * Class representing a variable
-  * @param id id of the variable
-  * @param domain finite and and discrete set of values
+  * @param id is the id of the variable
+  * @param domain is a finite and and discrete set of values
   */
 class Variable(val id: Int, val domain: Domain){
   /**
     * String representation of the variable
     */
-  override def toString : String = s"X$id in "+domain.mkString("[", ", ", "]")
+  override def toString : String = s"x$id in "+domain.mkString("[", ", ", "]")
 
   /**
     * Returns the index of a specific value
@@ -20,7 +20,7 @@ class Variable(val id: Int, val domain: Domain){
   def index(value : Value) : Int = domain.indexOf(value)
 
   /**
-    * Return true if the variable is sound
+    * Return true if the variable is sound, i.e. a non-empty domain
     */
   def sound() : Boolean = domain.nonEmpty
 }
