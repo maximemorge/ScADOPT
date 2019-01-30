@@ -1,7 +1,7 @@
 // Copyright (C) Maxime MORGE 2019
 package org.adopt.actor
 
-import org.adopt.problem.{Assignment, DCOP, Variable}
+import org.adopt.problem.{Context, DCOP, Variable}
 import org.adopt.dfs.DFS
 
 import akka.actor.{Actor, ActorRef, Props}
@@ -21,7 +21,7 @@ class SolverAgent(val pb: DCOP) extends Actor{
   // White page variable/actor
   private val directory = new Directory()
   // The assignment to build
-  private val assignment = new Assignment(pb)
+  private val assignment = new Context(pb)
 
   // Deploy and init
   pb.variables.foreach{ variable =>
@@ -63,9 +63,9 @@ class SolverAgent(val pb: DCOP) extends Actor{
       if (nbReady == pb.variables.size ) directory.allActors().foreach(_ ! Start)
 
     //When the value of variable is setup
-    case Valuation(value) =>
-        assignment.value += (directory.variables(sender) -> value)
-        if (assignment.isFull){
+    case Assign(value) =>
+        assignment.valuation += (directory.variables(sender) -> value)
+        if (assignment.isAssignment){
           solver ! Outcome(assignment) // reports the allocation
           directory.allActors().foreach(a => a ! Stop) // stops the actors
           context.stop(self) //stops the solverAgent

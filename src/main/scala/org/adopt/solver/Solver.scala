@@ -1,7 +1,7 @@
 // Copyright (C) Maxime MORGE 2019
 package org.adopt.solver
 
-import org.adopt.problem.{Assignment, DCOP}
+import org.adopt.problem.{Context, DCOP}
 
 /**
   * Abstract class representing a solver
@@ -14,12 +14,12 @@ abstract class Solver(val pb : DCOP) {
   /**
     * Returns an assignment
     */
-  protected def solve() : Assignment
+  protected def solve() : Context
 
   /**
     * Returns an assignment and update solving time
     */
-  def run() : Assignment = {
+  def run() : Context = {
     val startingTime = System.nanoTime()
     val assignment = solve()
     solvingTime = System.nanoTime() - startingTime

@@ -1,7 +1,7 @@
 // Copyright (C) Maxime MORGE 2019
 package org.adopt.solver
 
-import org.adopt.problem.{DCOP,Assignment}
+import org.adopt.problem.{DCOP,Context}
 import org.adopt.actor.{SolverAgent,Trace,Outcome,Start}
 
 import akka.actor.{ActorRef, ActorSystem, Props}
@@ -30,7 +30,7 @@ class DistributedSolver(pb : DCOP, system: ActorSystem) extends Solver(pb) {
   /**
     * Returns an allocation
     */
-  override def solve(): Assignment = {
+  override def solve(): Context = {
     if (debug) println("@startuml")
     if (debug) println("skinparam monochrome true")
     if (debug) println("hide footbox")

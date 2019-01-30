@@ -1,7 +1,7 @@
 // Copyright (C) Maxime MORGE 2019
 package org.adopt.actor
 
-import org.adopt.problem.{Assignment, Variable, Value}
+import org.adopt.problem.{Context, Variable, Value}
 
 /**
   *  All possible messages between the actors
@@ -17,11 +17,15 @@ case object Start extends Message
 case class Init(directory : Directory, parent : Option[Variable], children: Set[Variable]) extends Message
 // The variable agent is ready to start
 case object Ready extends Message
-// Gives the value of the variable agent
-case class Valuation(value : Value) extends Message
 // Gives an assignment and the statistics
-case class Outcome(assignment : Assignment) extends  Message
+case class Outcome(assignment : Context) extends  Message
 // Stops an agent
 case object Stop extends Message
 
 // DCOP messages
+// Fix the value of the variable agent
+case class Assign(value : Value) extends Message
+// Generalizes the nogood message of DisCSP
+case class Cost(ctxt : Context, lb : Double, ub: Double) extends Message
+// Reduces the redundant search
+case class Threshold(threshold: Double) extends Message

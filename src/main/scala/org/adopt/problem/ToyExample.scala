@@ -18,6 +18,8 @@ object ToyExample {
   val c23 = new Constraint(x2, x3, cost)
   val c24 = new Constraint(x2, x4, cost)
   val pb = new DCOP(Set(x1, x2, x3, x4), List(c24, c23, c13, c12))
-  val a1 = new Assignment(pb, Map(x1-> t, x2 -> t, x3 -> t, x4 -> t))
-  val a2 = new Assignment(pb, Map(x1 -> f, x2 -> f, x3 -> f, x4 -> f))
+  val a1 = new Context(pb)
+  a1.fix(Map(x1-> t, x2 -> t, x3 -> t, x4 -> t))
+  val a2 = new Context(pb)
+  a2.fix(Map(x1 -> f, x2 -> f, x3 -> f, x4 -> f))
 }

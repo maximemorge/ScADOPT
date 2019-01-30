@@ -1,7 +1,7 @@
 // Copyright (C) Maxime MORGE 2019
 package org.adopt.actor
 
-import org.adopt.problem.{DCOP, Variable}
+import org.adopt.problem.{DCOP, Variable, Value, Context}
 
 import akka.actor.{Actor, ActorRef}
 
@@ -21,6 +21,28 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
   private var parent : Option[Variable] = None
   // Children variables in the DFS
   private var children = Set[Variable]()
+  // Current value
+  private val value = variable.domain.head
+  // Agent's view of the assignment of higher neigbors
+  private val ctxt : Context = new Context(pb)
+  ctxt.fix(variable, variable.domain.head)
+  // lower bound
+  private var lb = Map[(Value,Variable),Double]()
+  // upper bound
+  private var ub = Map[(Value,Variable),Double]()
+
+  /**
+    * Resets bounds
+    */
+  def resetBound() : Unit ={
+    variable.domain.foreach{ v: Value =>
+      children.foreach{ child : Variable =>
+        lb += ((v, child) -> 0.0)
+        ub += ((v, child) -> Double.MaxValue)
+      }
+    }
+  }
+
 
   /**
     * Message handling
@@ -32,7 +54,9 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
       directory = d
       parent = p
       children = c
-      solverAgent ! Valuation(variable.domain.head)
+      // Initiate lb/up
+      resetBound()
+      solverAgent ! Assign(value)
 
     // When debugging mode is triggered
     case Trace =>

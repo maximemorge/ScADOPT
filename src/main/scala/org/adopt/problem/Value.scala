@@ -5,7 +5,7 @@ package org.adopt.problem
   * A domain for a variable is an ordered list of values
   */
 package object domain {
-  type Domain = List[_ <:Value]
+  type Domain = List[Value]
 }
 
 /**
