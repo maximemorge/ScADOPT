@@ -21,11 +21,9 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
   private var parent : Option[Variable] = None
   // Children variables in the DFS
   private var children = Set[Variable]()
-  // Current value
-  private val value = variable.domain.head
   // Agent's view of the assignment of higher neigbors
   private val ctxt : Context = new Context(pb)
-  ctxt.fix(variable, variable.domain.head)
+  variable.domain.head
   // lower bound
   private var lb = Map[(Value,Variable),Double]()
   // upper bound
@@ -43,6 +41,23 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
     }
   }
 
+  /**
+    * Returns the local cost for a specific value
+    */
+  def localCost(value: Value) : Double = {
+    var cost = 0.0
+    ctxt.valuation.keys.filter(_ == variable).foreach { otherVariable =>
+      pb.constraints.foreach { c =>
+        if (c.isOver(variable) && c.isOver(otherVariable)) {
+          val index1 = c.variable1.index(ctxt.valuation(c.variable1))
+          val index2 = c.variable2.index(ctxt.valuation(c.variable2))
+          cost += c.cost(index1)(index2)
+        }
+      }
+    }
+    cost
+  }
+
 
   /**
     * Message handling
@@ -56,7 +71,7 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
       children = c
       // Initiate lb/up
       resetBound()
-      solverAgent ! Assign(value)
+      solverAgent ! Assign(variable.domain.head)
 
     // When debugging mode is triggered
     case Trace =>

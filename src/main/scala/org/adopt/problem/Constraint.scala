@@ -37,4 +37,11 @@ class Constraint(val variable1: Variable, val variable2: Variable, val cost : Ar
     } if (cost(i)(j) < 0.0) return false
   true
   }
+
+  /**
+    * Returns true if the constraint is over a specific variable
+    */
+  def isOver(variable: Variable) : Boolean = variable == variable1 && variable == variable2
+
+
 }

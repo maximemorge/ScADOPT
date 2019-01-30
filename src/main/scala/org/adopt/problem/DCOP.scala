@@ -29,11 +29,18 @@ class DCOP(val variables: Set[Variable], val constraints : List[Constraint]){
   }
 
   /**
-    * Return true if the DCOP is sound, i.e.
+    * Returns true if the DCOP is sound, i.e.
     * 1 -there is at least one variable,
     * 2- each variable has a unique id
     * all the constraints are sound
     */
   def sound() : Boolean = variables.nonEmpty && variables.map(_.id).size == variables.size && constraints.forall( c => c.sound())
+
+  /**
+    * Returns the constraints over a specific variable
+    */
+  def constraints(variable: Variable) : List[Constraint] = constraints.filter(c => c.variable1 != variable && c.variable2 != variable)
+
+
 }
 
