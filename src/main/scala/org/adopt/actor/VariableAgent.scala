@@ -1,9 +1,9 @@
 // Copyright (C) Maxime MORGE 2019
 package org.adopt.actor
 
-import org.adopt.problem.{DCOP, Variable, Value, Context}
-
+import org.adopt.problem.{Context, DCOP, Value, Variable}
 import akka.actor.{Actor, ActorRef}
+import org.adopt.problem.ToyExample._
 
 /**
   * SolverAgent which starts and stops the computation of an allocation
@@ -49,15 +49,22 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
     ctxt.valuation.keys.filter(_ == variable).foreach { otherVariable =>
       pb.constraints.foreach { c =>
         if (c.isOver(variable) && c.isOver(otherVariable)) {
-          val index1 = c.variable1.index(ctxt.valuation(c.variable1))
-          val index2 = c.variable2.index(ctxt.valuation(c.variable2))
-          cost += c.cost(index1)(index2)
+          val cc = c.cost(variable, ctxt.valuation(variable), otherVariable, ctxt.valuation(otherVariable))
+          if (debug) println(s"Relevant constraint $c = $cc")
+          cost += cc
         }
       }
     }
     cost
   }
 
+  /**
+    * Returns the lower bound for the subtree rooted at the variable
+    * when the variable chooses value
+    */
+  def LB(value: Value) : Double = {
+    localCost(value) + children.toSeq.map( v => lb(value,v) ).sum
+  }
 
   /**
     * Message handling
@@ -71,6 +78,11 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
       children = c
       // Initiate lb/up
       resetBound()
+      if (variable==x3) {
+        ctxt.fix(Map(x1-> f, x2 -> f, x3 -> t, x4 -> t))
+        if (debug) println("x3=t localcost: "+localCost(f))
+
+      }
       solverAgent ! Assign(variable.domain.head)
 
     // When debugging mode is triggered

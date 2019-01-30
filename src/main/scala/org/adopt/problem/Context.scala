@@ -46,9 +46,7 @@ class Context(val pb : DCOP, var valuation : Map[Variable, Value]){
   def objective() : Double = {
     var sum = 0.0
     pb.constraints.foreach{ c =>
-      val index1 = c.variable1.index(valuation(c.variable1))
-      val index2 = c.variable2.index(valuation(c.variable2))
-      sum += c.cost(index1)(index2)
+      sum += c.cost(c.variable1, valuation(c.variable1), c.variable2, valuation(c.variable2))
     }
     sum
   }

@@ -42,5 +42,6 @@ class DCOP(val variables: Set[Variable], val constraints : List[Constraint]){
   def constraints(variable: Variable) : List[Constraint] = constraints.filter(c => c.variable1 != variable && c.variable2 != variable)
 
 
+
 }
 

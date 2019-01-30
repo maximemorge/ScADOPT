@@ -41,7 +41,23 @@ class Constraint(val variable1: Variable, val variable2: Variable, val cost : Ar
   /**
     * Returns true if the constraint is over a specific variable
     */
-  def isOver(variable: Variable) : Boolean = variable == variable1 && variable == variable2
+  def isOver(variable: Variable) : Boolean = variable == variable1 || variable == variable2
 
+  /**
+    * Returns the cost when
+    * variableA is assigned to valueA
+    * and variableB is assigned to valueB
+    */
+  def cost(variableA: Variable, valueA: Value, variableB: Variable, valueB: Value) : Double = {
+    var (index1,index2) = (0,0)
+    if (variableA == variable1) {
+      index1 = variable1.index(valueA)
+      index2 = variable2.index(valueB)
+    } else if (variableA == variable2) {
+      index2 = variable1.index(valueA)
+      index1 = variable2.index(valueB)
+    } else throw new RuntimeException(s"Constraint $this is not about $variableA and $variableB")
+    cost(index1)(index2)
+  }
 
 }
