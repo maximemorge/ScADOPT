@@ -23,20 +23,29 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
   private var children = Set[Variable]()
   // Agent's view of the assignment of higher neigbors
   private val ctxt : Context = new Context(pb)
-  variable.domain.head
-  // lower bound
+  // lower bound for the different couples (value,child)
   private var lb = Map[(Value,Variable),Double]()
-  // upper bound
+  // upper bound for the different couples (value,child)
   private var ub = Map[(Value,Variable),Double]()
+  // The backtrack threshold  for the different couples (value,child)
+  private var threshold = Map[(Value,Variable),Double]()
+
+  /**
+    * Returns true if the agent is a leaf agent
+    */
+  def isLeafAgent: Boolean = children.isEmpty
 
   /**
     * Resets bounds
     */
   def resetBound() : Unit ={
+    //If the agent is not a leaf but has not yet received any COST messages from its children,
+    // UB is equal to maximum value Inf and LB is equal to the minimum local cost δ(d) over all value choices d ∈ Di .
     variable.domain.foreach{ v: Value =>
       children.foreach{ child : Variable =>
         lb += ((v, child) -> 0.0)
         ub += ((v, child) -> Double.MaxValue)
+        threshold += ((v, child) -> 0.0)
       }
     }
   }
@@ -63,8 +72,29 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
     * when the variable chooses value
     */
   def LB(value: Value) : Double = {
-    localCost(value) + children.toSeq.map( v => lb(value,v) ).sum
+    localCost(value) + (if (! isLeafAgent) children.toSeq.map( v => lb(value,v) ).sum else 0.0)
   }
+
+  /**
+    * Returns the upper bound for the subtree rooted at the variable
+    * when the variable chooses value
+    */
+  def UB(value: Value) : Double = {
+    localCost(value) + (if (! isLeafAgent) children.toSeq.map( v => ub(value,v) ).sum else 0.0)
+  }
+
+  /**
+    * Returns a lower bound for the subtree rooted at the variable
+    */
+  def LB() : Double = variable.domain.map(v => LB(v)).min
+
+  /**
+    * Returns a upper bound for the subtree rooted at the variable
+    */
+  def UB() : Double = variable.domain.map(v => UB(v)).min
+
+  // A leaf agent has no subtree so δ(d) = LB(d) = UB(d) for all value choices d and thus,
+  // LB is always equal to UB at a leaf.
 
   /**
     * Message handling
@@ -78,12 +108,12 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
       children = c
       // Initiate lb/up
       resetBound()
-      if (variable==x3) {
-        ctxt.fix(Map(x1-> f, x2 -> f, x3 -> t, x4 -> t))
-        if (debug) println("x3=t localcost: "+localCost(f))
-
-      }
+      ctxt.fix(Map())
       solverAgent ! Assign(variable.domain.head)
+
+    // When the parent agent sets the threshold value
+    case Threshold(t) =>
+      //TODO threshold = t
 
     // When debugging mode is triggered
     case Trace =>
