@@ -3,7 +3,6 @@ package org.adopt.actor
 
 import org.adopt.problem.{Context, DCOP, Value, Variable}
 import akka.actor.{Actor, ActorRef}
-import org.adopt.problem.ToyExample._
 
 /**
   * SolverAgent which starts and stops the computation of an allocation
