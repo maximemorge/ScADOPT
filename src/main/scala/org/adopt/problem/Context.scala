@@ -3,6 +3,7 @@ package org.adopt.problem
 
 /**
   * Class representing a full assignment or a partial context
+  * Each variable agent maintains a record of higher priority neighbors
   * @param pb DCOP instance
   * @param valuation for each variable
   */

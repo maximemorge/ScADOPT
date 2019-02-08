@@ -12,7 +12,7 @@ class DCOP(val variables: Set[Variable], val constraints : List[Constraint]){
     * String representation
     */
   override def toString: String = s"Variables:\n"+
-    variables.mkString("\t", "\n\t", "\n")+
+    variables.map(v => v.description).mkString("\t", "\n\t", "\n")+
   "Constraints:\n"+
     constraints.mkString("\t", "\n\t", "\n")
 

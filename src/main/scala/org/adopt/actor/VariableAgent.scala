@@ -14,6 +14,7 @@ import akka.actor.{Actor, ActorRef}
 
 class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
   var debug = true
+  var trace = true
   // The actor which triggers the resolution
   private var solverAgent : ActorRef= context.parent
   // White page variable/actor
@@ -23,22 +24,33 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
   // Children variables in the DFS
   private var children = Set[Variable]()
   // Agent's view of the assignment of higher neighbors
-  private val ctxt : Context = new Context(pb)
+  private var currentContext : Context = new Context(pb)
   // lower bound for the different couples (value,child)
   private var lb = Map[(Value,Variable),Double]()
   // upper bound for the different couples (value,child)
   private var ub = Map[(Value,Variable),Double]()
-  // The backtrack threshold  for the different couples (value,child)
+  // The backtrack threshold for the different couples (value,child)
   private var t = Map[(Value,Variable),Double]()
   private var threshold : Double = 0.0
   // Current value of the variable
-  var di : Value = variable.domain.head
+  private var di : Value = variable.domain.head
+  // True if the agent has received a terminate message from the parent
+  private var terminated : Boolean = false
 
   /**
     * Returns true if the agent is a leaf agent
     */
   def isLeafAgent: Boolean = children.isEmpty
 
+  /**
+    * Returns true if the agent is a root agent
+    */
+  def isRootAgent: Boolean = parent.isEmpty
+
+  /**
+    * Returns the lower level neighbors
+    */
+  def neighbors() : Set[ActorRef] = children.map(v => directory.adr(v))
 
   /**
     * Returns the value which minimizes a bound
@@ -73,13 +85,12 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
   /**
     * Returns the local cost for a specific value
     */
-  def localCost(value: Value) : Double = {
+  def ∂(value: Value) : Double = {
     var cost = 0.0
-    ctxt.valuation.keys.filter(_ == variable).foreach { otherVariable =>
+    currentContext.valuation.keys.filter(_ == variable).foreach { otherVariable =>
       pb.constraints.foreach { c =>
         if (c.isOver(variable) && c.isOver(otherVariable)) {
-          val cc = c.cost(variable, ctxt.valuation(variable), otherVariable, ctxt.valuation(otherVariable))
-          if (debug) println(s"Relevant constraint $c = $cc")
+          val cc = c.cost(variable, currentContext.valuation(variable), otherVariable, currentContext.valuation(otherVariable))
           cost += cc
         }
       }
@@ -92,7 +103,7 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
     * when the variable chooses value
     */
   def LB(value: Value) : Double = {
-    localCost(value) + (if (! isLeafAgent) children.toSeq.map( v => lb(value,v) ).sum else 0.0)
+    ∂(value) + (if (! isLeafAgent) children.toSeq.map(v => lb(value,v) ).sum else 0.0)
   }
 
   /**
@@ -100,18 +111,18 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
     * when the variable chooses value
     */
   def UB(value: Value) : Double = {
-    localCost(value) + (if (! isLeafAgent) children.toSeq.map( v => ub(value,v) ).sum else 0.0)
+    ∂(value) + (if (! isLeafAgent) children.toSeq.map(v => ub(value,v) ).sum else 0.0)
   }
 
   /**
     * Returns a lower bound for the subtree rooted at the variable
     */
-  def LB() : Double = variable.domain.map(v => LB(v)).min
+  def LB : Double = variable.domain.map(v => LB(v)).min
 
   /**
     * Returns a upper bound for the subtree rooted at the variable
     */
-  def UB() : Double = variable.domain.map(v => UB(v)).min
+  def UB : Double = variable.domain.map(v => UB(v)).min
 
   // A leaf agent has no subtree so δ(d) = LB(d) = UB(d) for all value choices d and thus,
   // LB is always equal to UB at a leaf.
@@ -128,22 +139,27 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
       children = c
       initialize()
 
+    // When the parent terminate
+    case Terminate(ctxt) =>
+      terminated = true
+      currentContext = ctxt
+      backtrack()
+
     // When the parent agent sets the threshold value
-    case Threshold(t) =>
-      //TODO threshold = t
+    case Threshold(thresholdValue,ctxt) =>
+      if (ctxt.isCompatible(currentContext)){
+        threshold = thresholdValue
+        maintainThresholdInvariant()
+        backtrack()
+      }
 
     // When debugging mode is triggered
     case Trace =>
-      debug = true
-      directory.allActors().foreach(_ ! Trace)
-
-    // When the termination of the variable agent is triggered
-    case Stop =>
-      context.stop(self)
+      trace = true
 
     // Unexpected message
     case msg@_ =>
-      println(s"WARNING: VariableAgent $variable receives a message which was not expected: " + msg)
+      println(s"WARNING: VariableAgent $variable receives a message from ${directory.variables(sender)} which was not expected: " + msg)
   }
 
 
@@ -151,24 +167,81 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
     * Initialize procedure
     */
   def initialize() : Unit = {
+    if (debug) println(s"Agent $variable initializes")
     threshold = 0.0
-    ctxt.fix(Map())
+    currentContext.fix(Map())
     resetBound()// initiate lb/up
     di = minimize(LB)// di ← d that minimizes LB(d)
-    solverAgent ! Assign(di)
-    //backtrack()
+    //solverAgent ! Assign(di)
+    backtrack()
   }
 
   /**
     * Backtrack procedure
     */
   def backtrack() : Unit = {
-    if (threshold ~= UB()){
+    if (debug) println(s"Agent $variable backtracks")
+    if (threshold ~= UB) {
       di = minimize(UB)// di ← d that minimizes UB(d)
     }else if(LB(di) > threshold){
       di = minimize(LB)// di ← d that minimizes LB(d)
     }
-    // TODO SEND
+    // Sends value to each lower priority neighbor;
+    neighbors().foreach{ neighbor =>
+      if (trace) println(s"$variable -> ${directory.variables(neighbor)} : Assign($di)")
+      neighbor ! Assign(di)
+    }
+    maintainAllocationInvariant()
+    if (threshold ~= UB){
+      if (terminated || isRootAgent) {
+        currentContext.fix(variable,di)
+        neighbors().foreach{ neighbor =>
+          if (trace) println(s"$variable -> ${directory.variables(neighbor)} : Terminate($currentContext)")
+          neighbor ! Terminate(currentContext)
+        }
+        solverAgent ! Assign(di)
+        context.stop(self)
+      }
+    }
+    // Sends Cost to parent
+    currentContext.fix(variable,di)
+    if (parent.isDefined){
+      if (trace) println(s"$variable -> ${parent.get} : Cost($LB, $UB, $currentContext) ")
+      directory.adr(parent.get) ! Cost(LB, UB, currentContext)
+    }
+  }
+
+  /**
+    * Maintains allocation invariant
+    */
+  def maintainAllocationInvariant() : Unit = {
+    if (debug) println(s"Agent $variable maintains allocation invariant")
+    //we assume thresholdInvariant is satisfied
+    maintainThresholdInvariant()
+    while (threshold > ∂(di) + children.toSeq.map(xl => t(di, xl)).sum) {
+      //choose xl ∈Children where ub(di,xl)>t(di,xl);
+      val xl = children.find(xl => ub(di, xl) > t(di, xl))
+      if (xl.isDefined) t += ((di, xl.get) -> (t(di, xl.get) + 1.00))
+    }
+    while (threshold < ∂(di) + children.toSeq.map(xl => t(di, xl)).sum) {
+      //choose xl ∈Children where t(di,xl)>lb(di,xl);
+      val xl = children.find(xl => t(di, xl) > lb(di, xl))
+      if (xl.isDefined) t += ((di, xl.get) -> (t(di, xl.get) - 1.00))
+    }
+    currentContext.fix(variable,di)
+    children.foreach{ xl =>
+      if (trace) println(s"$variable -> $xl : Threshold(${t(di ,xl)}, $currentContext)")
+      directory.adr(xl) ! Threshold(t(di ,xl), currentContext)
+    }
+  }
+
+  /**
+    * Maintains threshold invariant
+    */
+  def maintainThresholdInvariant() : Unit = {
+    if (debug) println(s"Agent $variable maintains threshold invariant")
+    if (threshold < LB) threshold = LB
+    if (threshold > UB) threshold = UB
   }
 
 }

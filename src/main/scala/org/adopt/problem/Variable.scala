@@ -10,9 +10,14 @@ import domain.Domain
   */
 class Variable(val id: Int, val domain: Domain){
   /**
-    * String representation of the variable
+    * Long string representation of the variable
     */
-  override def toString : String = s"x$id in "+domain.mkString("[", ", ", "]")
+  def description : String = s"x$id in "+domain.mkString("[", ", ", "]")
+
+  /**
+    * Short string representation of the variable
+    */
+  override def toString : String = s"x$id"
 
   /**
     * Returns the index of a specific value

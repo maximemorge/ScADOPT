@@ -23,9 +23,11 @@ case class Outcome(assignment : Context) extends  Message
 case object Stop extends Message
 
 // DCOP messages
-// Fix the value of the variable agent
+// Fixes the value of the variable agent
 case class Assign(value : Value) extends Message
 // Generalizes the nogood message of DisCSP
 case class Cost(lb : Double, ub: Double, ctxt : Context) extends Message
 // Reduces the redundant search
-case class Threshold(threshold: Double) extends Message
+case class Threshold(threshold: Double, ctxt : Context) extends Message
+// Terminates the children with a context
+case class Terminate(ctxt: Context) extends Message

@@ -34,11 +34,11 @@ class SolverAgent(val pb: DCOP) extends Actor{
     *  Returns the root variable of the DFS whose children have been initiated
     */
   def init(dfs: DFS, parent: Option[Variable]) : Variable = {
-    var children = Set[Variable]()
-    dfs.children.foreach{ dfs =>
-      children += init(dfs,Some(dfs.root))
+    var neighbors = Set[Variable]()
+    dfs.children.foreach{ subDfs =>
+      neighbors += init(subDfs,Some(dfs.root))
     }
-    directory.adr(dfs.root) ! Init(directory, parent, children)
+    directory.adr(dfs.root) ! Init(directory, parent, neighbors)
     dfs.root
   }
 
@@ -67,7 +67,6 @@ class SolverAgent(val pb: DCOP) extends Actor{
         assignment.valuation += (directory.variables(sender) -> value)
         if (assignment.isAssignment){
           solver ! Outcome(assignment) // reports the allocation
-          directory.allActors().foreach(a => a ! Stop) // stops the actors
           context.stop(self) //stops the solverAgent
         }
 
