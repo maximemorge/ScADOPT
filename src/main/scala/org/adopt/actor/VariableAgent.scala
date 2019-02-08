@@ -2,6 +2,8 @@
 package org.adopt.actor
 
 import org.adopt.problem.{Context, DCOP, Value, Variable}
+import org.adopt.util.MathUtils.MathUtils
+
 import akka.actor.{Actor, ActorRef}
 
 /**
@@ -20,19 +22,38 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
   private var parent : Option[Variable] = None
   // Children variables in the DFS
   private var children = Set[Variable]()
-  // Agent's view of the assignment of higher neigbors
+  // Agent's view of the assignment of higher neighbors
   private val ctxt : Context = new Context(pb)
   // lower bound for the different couples (value,child)
   private var lb = Map[(Value,Variable),Double]()
   // upper bound for the different couples (value,child)
   private var ub = Map[(Value,Variable),Double]()
   // The backtrack threshold  for the different couples (value,child)
-  private var threshold = Map[(Value,Variable),Double]()
+  private var t = Map[(Value,Variable),Double]()
+  private var threshold : Double = 0.0
+  // Current value of the variable
+  var di : Value = variable.domain.head
 
   /**
     * Returns true if the agent is a leaf agent
     */
   def isLeafAgent: Boolean = children.isEmpty
+
+
+  /**
+    * Returns the value which minimizes a bound
+    */
+  def minimize(bound : Value=> Double) : Value = {
+    var dj = variable.domain.head
+    var min = Double.MaxValue
+    variable.domain.foreach { d =>
+      if (bound(d) < min) {
+        dj = d
+        min = bound(d)
+      }
+    }
+    dj
+  }
 
   /**
     * Resets bounds
@@ -44,7 +65,7 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
       children.foreach{ child : Variable =>
         lb += ((v, child) -> 0.0)
         ub += ((v, child) -> Double.MaxValue)
-        threshold += ((v, child) -> 0.0)
+        t += ((v, child) -> 0.0)
       }
     }
   }
@@ -105,10 +126,7 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
       directory = d
       parent = p
       children = c
-      // Initiate lb/up
-      resetBound()
-      ctxt.fix(Map())
-      solverAgent ! Assign(variable.domain.head)
+      initialize()
 
     // When the parent agent sets the threshold value
     case Threshold(t) =>
@@ -127,4 +145,30 @@ class VariableAgent(variable : Variable, pb : DCOP) extends Actor {
     case msg@_ =>
       println(s"WARNING: VariableAgent $variable receives a message which was not expected: " + msg)
   }
+
+
+  /**
+    * Initialize procedure
+    */
+  def initialize() : Unit = {
+    threshold = 0.0
+    ctxt.fix(Map())
+    resetBound()// initiate lb/up
+    di = minimize(LB)// di ← d that minimizes LB(d)
+    solverAgent ! Assign(di)
+    //backtrack()
+  }
+
+  /**
+    * Backtrack procedure
+    */
+  def backtrack() : Unit = {
+    if (threshold ~= UB()){
+      di = minimize(UB)// di ← d that minimizes UB(d)
+    }else if(LB(di) > threshold){
+      di = minimize(LB)// di ← d that minimizes LB(d)
+    }
+    // TODO SEND
+  }
+
 }

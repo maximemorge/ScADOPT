@@ -26,6 +26,6 @@ case object Stop extends Message
 // Fix the value of the variable agent
 case class Assign(value : Value) extends Message
 // Generalizes the nogood message of DisCSP
-case class Cost(ctxt : Context, lb : Double, ub: Double) extends Message
+case class Cost(lb : Double, ub: Double, ctxt : Context) extends Message
 // Reduces the redundant search
 case class Threshold(threshold: Double) extends Message
